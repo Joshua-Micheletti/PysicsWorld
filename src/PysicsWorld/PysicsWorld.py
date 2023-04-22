@@ -1,5 +1,8 @@
 class PhysicsBody:
-
+"""Class that represents bodies that move and interact through physics\n
+PhysicsBody(x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True)
+"""
+    # constructor function
     def __init__(self, x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True):
         self.x = x
         self.y = y
@@ -9,30 +12,35 @@ class PhysicsBody:
         self.movable = moving
         self.force = (0, 0)
         self.speed = (0, 0)
-
         self.center = (self.x + (self.width / 2), self.y + (self.height / 2))
 
-
+    # function to move the body by a (x, y) amount
     def move(self, x, y):
         self.x = self.x + x
         self.y = self.y + y
 
         self.center = (self.x + (self.width / 2), self.y + (self.height / 2))
 
+    # function to apply a force to the body by a (x, y) amount
     def push(self, x, y):
         self.force = (self.force[0] + x, self.force[1] + y)
 
 
 class PhysicsWorld:
-
-    def __init__(self):
+"""Class to calculate the physics simulation of the physics bodies\n
+PhysicsWorld(gravity = 1, friction = 0.1)"""
+    # constructor method
+    def __init__(self, gravity = 1, friction = 0.1):
         self.collision_solve_speed = 0.01
-        self.gravity = 1
-        self.friction = 0.1
+        self.gravity = gravity
+        self.friction = friction
         self.physics_bodies = dict()
 
+    # function to add a physics body to the world to interact with (wrapper for the physics body constructor)
     def add_body(self, name = "", x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True):
+        # if no name is provided to the function
         if len(name) == 0:
+            # name the body "physics_body_#" where # is the first available increasing number
             i = 0
             while True:
                 key = "physics_body_" + str(i)
@@ -42,13 +50,15 @@ class PhysicsWorld:
                     return(True)
 
                 i += 1
-
+        # otherwise create a new physics body with the name provided
         else:
             self.physics_bodies[name] = PhysicsBody(x, y, width, height, mass, moving)
 
-
+    # function to let the physics simulation advance
     def update(self, sub_steps = 1):
+        # for every body loaded in the physics world
         for body in self.physics_bodies.values():
+            # if the body is movable
             if body.movable:
                 # calculate the forces applied on the X and Y components, according to air friction, velocity, mass and gravity
                 totalForceX = body.force[0] + (self.friction * (-body.speed[0]))
@@ -59,27 +69,38 @@ class PhysicsWorld:
                 # update the velocity according to the acceleration
                 body.speed = (body.speed[0] + acceleration_x, body.speed[1] + acceleration_y)
 
+                # create a dictionary to store the bodies that the current body collides with
                 collisions = dict()
 
+                # for every other body in the world
                 for body_2 in self.physics_bodies.values():
                     if body_2 != body:
+                        # check the collision
                         collision_result = self.collision_dynamicRect_rect(body.x, body.y, body.width, body.height, body.speed,
                                                                            body_2.x, body_2.y, body_2.width, body_2.height)
 
+                        # if there was a collision
                         if not collision_result is None and not collision_result == False:
-                            # collisions[physics_bodies.keys()[physics_bodies.values()]]
+                            # find the name of the body that the original body collided with and store its distance in the collisions dictionary
                             collisions[list(self.physics_bodies.keys())[list(self.physics_bodies.values()).index(body_2)]] = collision_result[4]
 
+                # if any collision happened
                 if len(collisions) > 0:
+                    # sort the collisions by distance from the original body
                     sorted_collisions = sorted(collisions.items(), key = lambda x:x[1])
 
+                    # iterate through all the collisions in the sorted list of collisions
                     for collision in sorted_collisions:
+                        # extract the current body for the current collision
                         current_body = self.physics_bodies[collision[0]]
 
+                        # check the collision with the current colliding body (redundant)
                         collision_result = self.collision_dynamicRect_rect(body.x, body.y, body.width, body.height, body.speed,
                                                                            current_body.x, current_body.y, current_body.width, current_body.height)
 
+                        # if there is a collision
                         if not collision_result is None and not collision_result == False:
+                            # adjust the current body speed accordingly
                             body.speed = (body.speed[0] + (collision_result[2] * abs(body.speed[0]) * (1 - collision_result[4])), body.speed[1] + collision_result[3] * abs(body.speed[1]) * (1 - collision_result[4]))
 
 
@@ -89,6 +110,7 @@ class PhysicsWorld:
                 # reset the current force on the body
                 body.force = (0, 0)
 
+    # DEPRECATED
     def solve_collision(self, body_1, body_2):
 
         # if self.collision_rect_rect(body_1.x, body_1.y, body_1.width, body_1.height,
@@ -110,7 +132,7 @@ class PhysicsWorld:
 
             # body_1.force = (0, 0)
 
-
+    # basic rectangle vs rectangle collision detection (DEPRECATED)
     def collision_rect_rect(self, r1x, r1y, r1w, r1h, r2x, r2y, r2w, r2h):
         # are the sides of one rectangle touching the other?
         return (r1x + r1w >= r2x and # r1 right edge past r2 left
@@ -118,6 +140,7 @@ class PhysicsWorld:
                 r1y + r1h >= r2y and # r1 top edge past r2 bottom
                 r1y <= r2y + r2h)     # r1 bottom edge past r2 top
 
+    # function to test if a ray intersects a rectangle
     def collision_ray_rect(self, ray_origin_x, ray_origin_y, ray_end_x, ray_end_y, rect_x, rect_y, rect_w, rect_h):
         debug = False
 
@@ -151,15 +174,7 @@ class PhysicsWorld:
         if ray_direction_y == 0:
             ray_direction_y = 0.000001
 
-        # if ray_direction_x == 0 or ray_direction_y == 0:
-        #     return(False)
-
-        # if ray_direction_x == 0 and ((rect_x - ray_origin_x) != 0 or (rect_x + rect_w - ray_origin_x) != 0):
-        #     return(False)
-        #
-        # if ray_direction_y == 0 and ((rect_y + rect_h - ray_origin_y) != 0 or (rect_y - ray_origin_y) != 0):
-        #     return(False)
-
+        # calculate the near and far collision "times" on the x and y axis
         near_x_t = (rect_x - ray_origin_x) / ray_direction_x
         far_x_t = (rect_x + rect_w - ray_origin_x) / ray_direction_x
 
@@ -204,8 +219,6 @@ class PhysicsWorld:
             return False
 
         # collision detected
-        # if debug:
-            # print("collision")
 
         # calculate the contact point
         contact_point_x = ray_origin_x + ray_direction_x * hit_near_t
@@ -235,19 +248,23 @@ class PhysicsWorld:
 
         return((contact_point_x, contact_point_y, contact_normal_x, contact_normal_y, hit_near_t))
 
-
+    # function to check collision between a moving rectangle and a stationary rectangle
     def collision_dynamicRect_rect(self, current_x, current_y, current_w, current_h, current_speed, target_x, target_y, target_w, target_h):
-
+        # if the dynamic rectangle is not moving, there is no collision
         if current_speed[0] == 0 and current_speed[1] == 0:
             return(False)
 
+        # expand the target rectangle to make the borders of the dynamic rectangle match with the borders of the stationary rectangle
         expanded_target_x = target_x - current_w / 2
         expanded_target_y = target_y - current_h / 2
 
         expanded_target_w = target_w + current_w
         expanded_target_h = target_h + current_h
 
+        # calculate the collision of the ray that goes from the center of the dynamic rectangle with the direction and module of the rectangle speed and the stationary rectangle
         collision_result = self.collision_ray_rect(current_x + current_w / 2, current_y + current_h / 2, current_x + current_w / 2 + current_speed[0], current_y + current_h / 2 + current_speed[1], expanded_target_x, expanded_target_y, expanded_target_w, expanded_target_h)
 
+        # if there was a collision
         if not collision_result is None and not collision_result == False:
+            # return it
             return(collision_result)
