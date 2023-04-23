@@ -39,3 +39,12 @@ In order to visualize the effects of the simulation, you need to retrieve the ne
 ### applying forces to the bodies
 To apply a force to a body (for example from a controller module to move a character), use the `push(x,y)` method from the PhysicsBody class:  
 `physics_world.physics_bodies["player"].push(x,y)`
+
+### variables in the PhysicsWorld
+The PhysicsWorld object contains a few variables that allow to change the physics properties and extract information:  
+To set the gravity in the world, use:  
+`physics_world.gravity = 1`  
+To set the air friction, use:  
+`physics_world.friction = 0.1`  
+To retrieve the time passed to calculate the last step in the simulation, use:  
+`physics_world.elapsed_time`
