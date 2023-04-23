@@ -1,7 +1,9 @@
+import time
+
 class PhysicsBody:
-"""Class that represents bodies that move and interact through physics\n
-PhysicsBody(x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True)
-"""
+    """Class that represents bodies that move and interact through physics\n
+    PhysicsBody(x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True)
+    """
     # constructor function
     def __init__(self, x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True):
         self.x = x
@@ -27,14 +29,15 @@ PhysicsBody(x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True)
 
 
 class PhysicsWorld:
-"""Class to calculate the physics simulation of the physics bodies\n
-PhysicsWorld(gravity = 1, friction = 0.1)"""
+    """Class to calculate the physics simulation of the physics bodies\n
+    PhysicsWorld(gravity = 1, friction = 0.1)"""
     # constructor method
     def __init__(self, gravity = 1, friction = 0.1):
         self.collision_solve_speed = 0.01
         self.gravity = gravity
         self.friction = friction
         self.physics_bodies = dict()
+        self.elapsed_time = 0
 
     # function to add a physics body to the world to interact with (wrapper for the physics body constructor)
     def add_body(self, name = "", x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True):
@@ -56,6 +59,8 @@ PhysicsWorld(gravity = 1, friction = 0.1)"""
 
     # function to let the physics simulation advance
     def update(self, sub_steps = 1):
+        current_time = time.time()
+
         # for every body loaded in the physics world
         for body in self.physics_bodies.values():
             # if the body is movable
@@ -88,7 +93,6 @@ PhysicsWorld(gravity = 1, friction = 0.1)"""
                 if len(collisions) > 0:
                     # sort the collisions by distance from the original body
                     sorted_collisions = sorted(collisions.items(), key = lambda x:x[1])
-
                     # iterate through all the collisions in the sorted list of collisions
                     for collision in sorted_collisions:
                         # extract the current body for the current collision
@@ -97,6 +101,8 @@ PhysicsWorld(gravity = 1, friction = 0.1)"""
                         # check the collision with the current colliding body (redundant)
                         collision_result = self.collision_dynamicRect_rect(body.x, body.y, body.width, body.height, body.speed,
                                                                            current_body.x, current_body.y, current_body.width, current_body.height)
+
+                        # collision_result = collisions[collision]
 
                         # if there is a collision
                         if not collision_result is None and not collision_result == False:
@@ -109,6 +115,9 @@ PhysicsWorld(gravity = 1, friction = 0.1)"""
                 body.y += body.speed[1]
                 # reset the current force on the body
                 body.force = (0, 0)
+
+        finish_time = time.time()
+        self.elapsed_time = finish_time - current_time
 
     # DEPRECATED
     def solve_collision(self, body_1, body_2):
@@ -169,10 +178,10 @@ PhysicsWorld(gravity = 1, friction = 0.1)"""
         # calculate the near and far t values for x and y
         # ADD FIX FOR PARALLEL VECTORS (DIVISION BY 0)
         if ray_direction_x == 0:
-            ray_direction_x = 0.000001
+            ray_direction_x = 0.01
 
         if ray_direction_y == 0:
-            ray_direction_y = 0.000001
+            ray_direction_y = 0.01
 
         # calculate the near and far collision "times" on the x and y axis
         near_x_t = (rect_x - ray_origin_x) / ray_direction_x
