@@ -48,3 +48,7 @@ To set the air friction, use:
 `physics_world.friction = 0.1`  
 To retrieve the time passed to calculate the last step in the simulation, use:  
 `physics_world.elapsed_time`
+
+### variables in the PhysicsBody
+The PhysicsBody objects contain information about the position and velocity of the body, its dimentions but also which direction the body is colliding with another entity:  
+`physics_world.physics_bodies["name"].touching["<left, right, up, down>"]`

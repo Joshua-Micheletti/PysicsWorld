@@ -16,6 +16,12 @@ class PhysicsBody:
         self.speed = (0, 0)
         self.center = (self.x + (self.width / 2), self.y + (self.height / 2))
 
+        self.touching = dict()
+        self.touching["up"] = False
+        self.touching["down"] = False
+        self.touching["left"] = False
+        self.touching["right"] = False
+
     # function to move the body by a (x, y) amount
     def move(self, x, y):
         self.x = self.x + x
@@ -63,6 +69,12 @@ class PhysicsWorld:
 
         # for every body loaded in the physics world
         for body in self.physics_bodies.values():
+            # reset the touching values
+            body.touching["left"] = False
+            body.touching["right"] = False
+            body.touching["up"] = False
+            body.touching["down"] = False
+
             # if the body is movable
             if body.movable:
                 # calculate the forces applied on the X and Y components, according to air friction, velocity, mass and gravity
@@ -102,10 +114,18 @@ class PhysicsWorld:
                         collision_result = self.collision_dynamicRect_rect(body.x, body.y, body.width, body.height, body.speed,
                                                                            current_body.x, current_body.y, current_body.width, current_body.height)
 
-                        # collision_result = collisions[collision]
-
                         # if there is a collision
                         if not collision_result is None and not collision_result == False:
+                            # depending on the normal of the collision, determine where the body is touching
+                            if collision_result[2] > 0:
+                                body.touching["left"] = True
+                            if collision_result[2] < 0:
+                                body.touching["right"] = True
+                            if collision_result[3] > 0:
+                                body.touching["down"] = True
+                            if collision_result[3] < 0:
+                                body.touching["up"] = True
+
                             # adjust the current body speed accordingly
                             body.speed = (body.speed[0] + (collision_result[2] * abs(body.speed[0]) * (1 - collision_result[4])), body.speed[1] + collision_result[3] * abs(body.speed[1]) * (1 - collision_result[4]))
 
