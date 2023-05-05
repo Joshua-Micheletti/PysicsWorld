@@ -38,12 +38,13 @@ class PhysicsWorld:
     """Class to calculate the physics simulation of the physics bodies\n
     PhysicsWorld(gravity = 1, friction = 0.1)"""
     # constructor method
-    def __init__(self, gravity = 1, friction = 0.1):
+    def __init__(self, gravity = 30, friction = 10):
         self.collision_solve_speed = 0.01
         self.gravity = gravity
         self.friction = friction
         self.physics_bodies = dict()
         self.elapsed_time = 0
+        self.last_update = time.time()
 
     # function to add a physics body to the world to interact with (wrapper for the physics body constructor)
     def add_body(self, name = "", x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True):
@@ -64,8 +65,11 @@ class PhysicsWorld:
             self.physics_bodies[name] = PhysicsBody(x, y, width, height, mass, moving)
 
     # function to let the physics simulation advance
-    def update(self, sub_steps = 1):
-        current_time = time.time()
+    def update(self, dt = 0, sub_steps = 1):
+        if dt == 0:
+            dt = time.time() - self.last_update
+
+        self.last_update = time.time()
 
         # for every body loaded in the physics world
         for body in self.physics_bodies.values():
@@ -81,10 +85,10 @@ class PhysicsWorld:
                 totalForceX = body.force[0] + (self.friction * (-body.speed[0]))
                 totalForceY = body.force[1] + (self.friction * (-body.speed[1])) - (body.mass * self.gravity)
                 # calculate the acceleration by the formula: "a = F / m"
-                acceleration_x = totalForceX / body.mass
-                acceleration_y = totalForceY / body.mass
+                acceleration_x = (totalForceX / body.mass) * dt
+                acceleration_y = (totalForceY / body.mass) * dt
                 # update the velocity according to the acceleration
-                body.speed = (body.speed[0] + acceleration_x, body.speed[1] + acceleration_y)
+                body.speed = ((body.speed[0] + acceleration_x), (body.speed[1] + acceleration_y))
 
                 # create a dictionary to store the bodies that the current body collides with
                 collisions = dict()
@@ -127,7 +131,7 @@ class PhysicsWorld:
                                 body.touching["up"] = True
 
                             # adjust the current body speed accordingly
-                            body.speed = (body.speed[0] + (collision_result[2] * abs(body.speed[0]) * (1 - collision_result[4])), body.speed[1] + collision_result[3] * abs(body.speed[1]) * (1 - collision_result[4]))
+                            body.speed = ((body.speed[0] + (collision_result[2] * abs(body.speed[0]) * (1 - collision_result[4]))), (body.speed[1] + collision_result[3] * abs(body.speed[1]) * (1 - collision_result[4])))
 
 
                 # update the position according to the velocity
@@ -137,7 +141,7 @@ class PhysicsWorld:
                 body.force = (0, 0)
 
         finish_time = time.time()
-        self.elapsed_time = finish_time - current_time
+        self.elapsed_time = finish_time - self.last_update
 
     # DEPRECATED
     def solve_collision(self, body_1, body_2):
