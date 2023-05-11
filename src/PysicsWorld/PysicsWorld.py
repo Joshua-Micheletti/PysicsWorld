@@ -45,6 +45,7 @@ class PhysicsWorld:
         self.physics_bodies = dict()
         self.elapsed_time = 0
         self.last_update = time.time()
+        self.zero_division_threshold = 0.000001
 
     # function to add a physics body to the world to interact with (wrapper for the physics body constructor)
     def add_body(self, name = "", x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True):
@@ -210,17 +211,23 @@ class PhysicsWorld:
         # calculate the near and far t values for x and y
         # ADD FIX FOR PARALLEL VECTORS (DIVISION BY 0)
         if ray_direction_x == 0:
-            ray_direction_x = 0.01
+            ray_direction_x = self.zero_division_threshold
 
         if ray_direction_y == 0:
-            ray_direction_y = 0.01
+            ray_direction_y = self.zero_division_threshold
+
+        # if ray_direction_x == 0 or ray_direction_y == 0:
+        #     return False
 
         # calculate the near and far collision "times" on the x and y axis
+
         near_x_t = (rect_x - ray_origin_x) / ray_direction_x
         far_x_t = (rect_x + rect_w - ray_origin_x) / ray_direction_x
 
         near_y_t = (rect_y + rect_h- ray_origin_y) / ray_direction_y
         far_y_t = (rect_y - ray_origin_y) / ray_direction_y
+
+
 
         # swap the near and far values in case they don't make sense
         if near_x_t > far_x_t:
