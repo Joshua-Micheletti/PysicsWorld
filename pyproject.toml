@@ -1,6 +1,6 @@
 [project]
 name = "PysicsWorld"
-version = "0.1.6"
+version = "0.1.7"
 authors = [
   { name="Joshua Micheletti", email="joshua.e.n.micheletti@gmail.com" },
 ]

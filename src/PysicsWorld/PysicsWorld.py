@@ -38,7 +38,7 @@ class PhysicsWorld:
     """Class to calculate the physics simulation of the physics bodies\n
     PhysicsWorld(gravity = 1, friction = 0.1)"""
     # constructor method
-    def __init__(self, gravity = 30, friction = 10):
+    def __init__(self, gravity = 200, friction = 50):
         self.collision_solve_speed = 0.01
         self.gravity = gravity
         self.friction = friction
@@ -82,13 +82,15 @@ class PhysicsWorld:
             # if the body is movable
             if body.movable:
                 # calculate the forces applied on the X and Y components, according to air friction, velocity, mass and gravity
-                totalForceX = body.force[0] + (self.friction * (-body.speed[0]))
-                totalForceY = body.force[1] + (self.friction * (-body.speed[1])) - (body.mass * self.gravity)
+                totalForceX = (body.force[0] + (self.friction * (-body.speed[0]))) * dt
+                totalForceY = (body.force[1] + (self.friction * (-body.speed[1])) - (body.mass * self.gravity)) * dt
+
                 # calculate the acceleration by the formula: "a = F / m"
-                acceleration_x = (totalForceX / body.mass) * dt
-                acceleration_y = (totalForceY / body.mass) * dt
+                acceleration_x = (totalForceX / body.mass)
+                acceleration_y = (totalForceY / body.mass)
                 # update the velocity according to the acceleration
                 body.speed = ((body.speed[0] + acceleration_x), (body.speed[1] + acceleration_y))
+                # body.speed = ((body.speed[0] + body.force[0] - self.gravity) * dt * dt, (body.speed[1] + body.force[1]) * dt)
 
                 # create a dictionary to store the bodies that the current body collides with
                 collisions = dict()
@@ -134,11 +136,17 @@ class PhysicsWorld:
                             body.speed = ((body.speed[0] + (collision_result[2] * abs(body.speed[0]) * (1 - collision_result[4]))), (body.speed[1] + collision_result[3] * abs(body.speed[1]) * (1 - collision_result[4])))
 
 
+                if body.speed[1] != 0:
+                    body.touching["down"] = False
+
                 # update the position according to the velocity
                 body.x += body.speed[0]
                 body.y += body.speed[1]
+
                 # reset the current force on the body
                 body.force = (0, 0)
+
+
 
         finish_time = time.time()
         self.elapsed_time = finish_time - self.last_update
