@@ -45,7 +45,8 @@ class PhysicsWorld:
         self.physics_bodies = dict()
         self.elapsed_time = 0
         self.last_update = time.time()
-        self.zero_division_threshold = 0.000001
+        self.zero_division_threshold_x = 0.000001
+        self.zero_division_threshold_y = 0.000001
 
     # function to add a physics body to the world to interact with (wrapper for the physics body constructor)
     def add_body(self, name = "", x = 0, y = 0, width = 1, height = 1, mass = 1, moving = True):
@@ -186,6 +187,19 @@ class PhysicsWorld:
     def collision_ray_rect(self, ray_origin_x, ray_origin_y, ray_end_x, ray_end_y, rect_x, rect_y, rect_w, rect_h):
         debug = False
 
+        division_threshold_x = self.zero_division_threshold_x
+        division_threshold_y = self.zero_division_threshold_y
+
+        if ray_origin_x <= rect_x + rect_w / 2:
+            division_threshold_x = -self.zero_division_threshold_x
+        elif ray_origin_x > rect_x + rect_w / 2:
+            division_threshold_x = self.zero_division_threshold_x
+
+        if ray_origin_y <= rect_y + rect_h / 2:
+            division_threshold_y = -self.zero_division_threshold_y
+        elif ray_origin_y > rect_y + rect_h / 2:
+            division_threshold_y = self.zero_division_threshold_y
+
         if debug:
             print("ray vs rect collision")
 
@@ -211,10 +225,10 @@ class PhysicsWorld:
         # calculate the near and far t values for x and y
         # ADD FIX FOR PARALLEL VECTORS (DIVISION BY 0)
         if ray_direction_x == 0:
-            ray_direction_x = self.zero_division_threshold
+            ray_direction_x = division_threshold_x
 
         if ray_direction_y == 0:
-            ray_direction_y = self.zero_division_threshold
+            ray_direction_y = division_threshold_y
 
         # if ray_direction_x == 0 or ray_direction_y == 0:
         #     return False
